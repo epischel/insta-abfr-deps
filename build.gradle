@@ -1,0 +1,254 @@
+buildscript {
+  ext {
+    springBootVersion = "2.3.4.RELEASE"
+  }
+  repositories {
+      mavenCentral()
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    classpath("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.0.1622")
+    classpath("org.yaml:snakeyaml:1.8")
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'application'
+apply plugin: 'jacoco'
+apply plugin: 'org.sonarqube'
+
+project.version = '1.0.0-SNAPSHOT'
+
+repositories {
+  mavenCentral()
+}
+
+
+
+import groovy.util.slurpersupport.GPathResult
+import groovy.json.JsonOutput
+import org.yaml.snakeyaml.Yaml
+
+def initializeFormatter() {
+
+  def formatterDefinitions = new XmlSlurper().parse("$rootDir/etc/codeformatter.xml")
+  assert formatterDefinitions instanceof GPathResult
+
+  def Properties props = new Properties();
+  formatterDefinitions.'**'.findAll { node -> node.name() == 'setting' }*.each { n -> props.put(n.@id.text(), n.@value.text()) }
+
+  println props.size() + " gelesene Formatierungsanweisungen"
+
+  return props
+}
+
+def Properties formatterProperties = initializeFormatter()
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava.options.encoding = 'UTF-8'
+tasks.withType(JavaCompile) {
+  options.encoding = 'UTF-8'
+}
+
+mainClassName = "de.epischel.insta.InstaAbfApplication"
+ext.mainClass = mainClassName
+ext.distributionName = "xps3-insta-abfrage"
+
+ext.restassuredVersion = "3.0.2"
+ext.camelVersion = "3.6.0"
+ext.springCloudVersion = "Greenwich.SR3"
+
+ext.getGitHash = { ->
+  def p = 'git rev-parse --short HEAD'.execute()
+  p.waitFor()
+  return p.text.trim()
+}
+
+ext.sharedManifest = manifest {
+  attributes(
+      'Name': 'INSTA-Abfr',
+      'Specification-Title': 'INSTA-Abfr',
+      'Specification-Version': project.version,
+      'Implementation-Version': "$project.version",
+      'Implementation-Build': getGitHash()
+  )
+}
+
+springBoot {
+  buildInfo()
+}
+
+bootJar {
+  baseName distributionName
+  excludeDevtools true
+  manifest {
+    from sharedManifest
+  }
+}
+
+bootDistZip {
+  baseName distributionName
+}
+
+bootDistTar {
+  enabled = false
+}
+
+distTar {
+  enabled = false
+}
+
+distZip {
+  enabled = false
+}
+
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+  }
+}
+
+dependencies {
+
+  compile "org.springframework.boot:spring-boot-starter-parent:${springBootVersion}"
+  compile 'org.springframework.boot:spring-boot-devtools'
+  compile 'org.springframework.boot:spring-boot-starter-actuator'
+  compile 'org.springframework.boot:spring-boot-starter-web'
+  compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+
+  compile 'io.micrometer:micrometer-core:1.5.7'
+  compile 'io.micrometer:micrometer-registry-prometheus:1.5.7'
+  compile 'io.prometheus.jmx:collector:0.14.0'
+
+  compile "org.apache.camel.springboot:camel-spring-boot-starter:${camelVersion}"
+  compile "org.apache.camel:camel-spring-ws:${camelVersion}"
+  compile "org.apache.camel:camel-jaxb:${camelVersion}"
+  compile "org.apache.camel:camel-mail:${camelVersion}"
+  compile "org.apache.camel:camel-micrometer:${camelVersion}"
+  compile "org.apache.camel:camel-zipkin:${camelVersion}"
+  compile "org.apache.camel:camel-zipfile:${camelVersion}"
+  compile "org.apache.camel:camel-base64:${camelVersion}"
+  compile "org.apache.camel:camel-servlet:${camelVersion}"
+  compile "org.apache.camel:camel-caffeine:${camelVersion}"
+  compile "org.apache.camel:camel-jackson:${camelVersion}"
+
+  compile 'com.google.guava:guava:30.0-jre'
+
+  compile 'org.apache.httpcomponents:httpcore:4.4.6'
+  compile 'org.apache.httpcomponents:httpclient:4.5.3'
+  compile 'org.apache.httpcomponents:httpmime:4.5.6'
+
+
+  runtime 'org.webjars:bootstrap:3.3.6'
+  runtime 'org.webjars.bower:fontawesome:4.5.0'
+
+  testCompile 'com.github.tomakehurst:wiremock-standalone:2.23.2'
+  testCompile 'junit:junit:4.12'
+  testCompile "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+  testCompile "org.apache.camel:camel-test-spring:${camelVersion}"
+  testCompile "io.rest-assured:rest-assured:${restassuredVersion}"
+
+  testCompile 'org.codehaus.groovy:groovy:2.4.6'
+  testCompile 'org.codehaus.groovy:groovy-xml:2.4.6'
+  testCompile 'org.codehaus.groovy:groovy-json:2.4.6'
+  testCompile 'org.xmlunit:xmlunit-parent:2.1.1'
+  testCompile 'org.xmlunit:xmlunit-core:2.1.1'
+  testCompile 'org.xmlunit:xmlunit-matchers:2.1.1'
+}
+
+eclipse {
+  classpath {
+    downloadSources=true
+  }
+  jdt {
+    file {
+      withProperties { properties ->
+        // Properties die durch das Projekt definiert werden nicht überschreiben
+        properties.each { prop ->
+          if (formatterProperties.containsKey(prop.getKey())) {
+            formatterProperties.remove(prop.getKey())
+          }
+        }
+        properties.putAll(formatterProperties)
+      }
+    }
+  }
+}
+
+processResources.dependsOn copyServiceDescription
+
+
+task createVersionInfo {
+  doLast() {
+    mkdir("$sourceSets.main.output.resourcesDir/static/")
+
+    def hash;
+    try {
+      hash = getGitHash()
+    } catch (Exception ex) {
+      hash = System.getenv("GIT_COMMIT") as String ? System.getenv("GIT_COMMIT").substring(0,6) : "UNKNOWN"
+    }
+
+    def json = JsonOutput.toJson([
+      buildDate: new Date().format('dd.MM.yyyy HH:mm:ss'),
+      version: project.version,
+      buildNumber: hash,
+      revision : hash,
+      appName : applicationName
+    ])
+
+    new File("$sourceSets.main.output.resourcesDir/static/version.json").write(json)
+  }
+}
+
+// the inject version task requires the output folders to be already created
+createVersionInfo.mustRunAfter processResources
+
+// the version properties file have to be added to the classpath resource
+classes.dependsOn createVersionInfo
+
+/* ###########################################################################
+ * Testabdeckung
+ * ###########################################################################
+ */
+
+def codeCoverageExcludes = ['**/*Test*.class']
+
+jacoco {
+  toolVersion = '0.7.6.201602180812'
+}
+
+jacocoTestReport {
+  sourceSets sourceSets.main
+  reports {
+    xml {
+      enabled true
+    }
+    html {
+      enabled true
+    }
+  }
+  afterEvaluate {
+    getClassDirectories().setFrom( files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: (codeCoverageExcludes))
+    }))
+  }
+}
+
+test {
+  jacoco {
+    excludes = codeCoverageExcludes
+  }
+}
+
+
+bootJar.dependsOn(':frontend:copyDist')
+bootRun.dependsOn('build')
