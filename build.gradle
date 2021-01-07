@@ -148,7 +148,7 @@ dependencies {
 
 
   runtime 'org.webjars:bootstrap:4.5.3'
-  runtime 'org.webjars.bower:fontawesome:4.5.0'
+  runtime 'org.webjars.bower:fontawesome:4.7.0'
 
   testCompile 'com.github.tomakehurst:wiremock-standalone:2.23.2'
   testCompile 'junit:junit:4.13.1'
