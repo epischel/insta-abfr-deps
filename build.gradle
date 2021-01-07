@@ -144,7 +144,7 @@ dependencies {
 
   compile 'org.apache.httpcomponents:httpcore:4.4.6'
   compile 'org.apache.httpcomponents:httpclient:4.5.13'
-  compile 'org.apache.httpcomponents:httpmime:4.5.6'
+  compile 'org.apache.httpcomponents:httpmime:4.5.13'
 
 
   runtime 'org.webjars:bootstrap:3.3.6'
