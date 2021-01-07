@@ -147,7 +147,7 @@ dependencies {
   compile 'org.apache.httpcomponents:httpmime:4.5.6'
 
 
-  runtime 'org.webjars:bootstrap:3.3.6'
+  runtime 'org.webjars:bootstrap:4.5.3'
   runtime 'org.webjars.bower:fontawesome:4.5.0'
 
   testCompile 'com.github.tomakehurst:wiremock-standalone:2.23.2'
