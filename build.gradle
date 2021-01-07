@@ -159,7 +159,7 @@ dependencies {
   testCompile 'org.codehaus.groovy:groovy:3.0.7'
   testCompile 'org.codehaus.groovy:groovy-xml:2.4.6'
   testCompile 'org.codehaus.groovy:groovy-json:2.4.6'
-  testCompile 'org.xmlunit:xmlunit-parent:2.1.1'
+  testCompile 'org.xmlunit:xmlunit-parent:2.8.2'
   testCompile 'org.xmlunit:xmlunit-core:2.8.2'
   testCompile 'org.xmlunit:xmlunit-matchers:2.8.2'
 }
