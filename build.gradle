@@ -126,7 +126,7 @@ dependencies {
 
   compile 'io.micrometer:micrometer-core:1.5.7'
   compile 'io.micrometer:micrometer-registry-prometheus:1.5.7'
-  compile 'io.prometheus.jmx:collector:0.14.0'
+  compile 'io.prometheus.jmx:collector:0.15.0'
 
   compile "org.apache.camel.springboot:camel-spring-boot-starter:${camelVersion}"
   compile "org.apache.camel:camel-spring-ws:${camelVersion}"
