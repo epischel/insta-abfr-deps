@@ -157,7 +157,7 @@ dependencies {
   testCompile "io.rest-assured:rest-assured:${restassuredVersion}"
 
   testCompile 'org.codehaus.groovy:groovy:3.0.7'
-  testCompile 'org.codehaus.groovy:groovy-xml:2.4.6'
+  testCompile 'org.codehaus.groovy:groovy-xml:3.0.8'
   testCompile 'org.codehaus.groovy:groovy-json:2.4.6'
   testCompile 'org.xmlunit:xmlunit-parent:2.8.2'
   testCompile 'org.xmlunit:xmlunit-core:2.8.2'
