@@ -62,7 +62,7 @@ ext.distributionName = "xps3-insta-abfrage"
 
 ext.restassuredVersion = "3.0.2"
 ext.camelVersion = "3.6.0"
-ext.springCloudVersion = "Greenwich.SR3"
+ext.springCloudVersion = "Hoxton.SR12"
 
 ext.getGitHash = { ->
   def p = 'git rev-parse --short HEAD'.execute()
